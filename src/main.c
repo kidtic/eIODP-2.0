@@ -9,14 +9,27 @@ int zrecv(char* buf, int size)
 
 }
 
-int zsend(char* buf, int size)
+int zsend(uint8_t* buf, int size)
 {
-    
+    int i=0;
+    printf("send:");
+    for(i=0; i<size;i++)
+    {
+        if(i%8==0)printf("\r\n");
+        printf("%02x ",buf[i]);
+    }
+    printf("\r\n");
 }
 
 int testFunc(eIODP_FUNC_MSG msg)
 {
+    int i = 0;
     printf("testFunc msg:0x%x\r\n",msg.cmd);
+    for(i=0; i<msg.len; i++){
+        msg.retdata[i] = msg.data[i]+1;
+    }
+    *msg.retlen = msg.len;
+    return 0;
 }
 
 
@@ -28,6 +41,8 @@ int main(int argc, char** argv)
     eIODP_TYPE* eiodp_fd = eiodp_init(IODP_MODE_SERVER, zrecv, zsend);
 
     srand(time(NULL));
+
+    eiodp_get_register(eiodp_fd, 0x200, testFunc);
 
     int okcnt = 0;
     int errorcnt = 0;
@@ -41,9 +56,16 @@ int main(int argc, char** argv)
 */   
     uint8_t rxdata[1024];
 
-    int slen = eiodp_pktset(rxdata,"123456789",9,IODP_PTC_TYPE_GET);
-    int slen2 = eiodp_pktset(&rxdata[slen-5],"abcdefghijklmn",14,IODP_PTC_TYPE_GET);  //可以缺页会导致下一帧也丢失
-    int slen3 = eiodp_pktset(&rxdata[slen+slen2],"abcdefghijklmn",14,IODP_PTC_TYPE_GET);  
+    uint8_t pdata[128]={
+        0x0,0x0,0x1,0x00,   //cnt
+        0x0,0x0,0x2,0x00,   //cmd
+        0x0,0x0,0x0,0x10,   //get
+        1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+    };
+
+    int slen = eiodp_pktset(rxdata,pdata,28,IODP_PTC_TYPE_GET);
+    int slen2 = eiodp_pktset(&rxdata[slen-5],pdata,28,IODP_PTC_TYPE_GET);  //可以缺页会导致下一帧也丢失
+    int slen3 = eiodp_pktset(&rxdata[slen+slen2],pdata,28,IODP_PTC_TYPE_GET);  
 
     int scnt = 0;
     int dt = 0;
@@ -58,7 +80,7 @@ int main(int argc, char** argv)
         //eiodp_info(eiodp_fd,0);
     }
 
-    eiodp_info(eiodp_fd,0);
+    //eiodp_info(eiodp_fd,0);
     
     
     return 0;

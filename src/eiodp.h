@@ -6,10 +6,12 @@
 #include "string.h"
 
 /*============================config区域==============================*/
-//定义接受包缓存大小
+//定义接受环形缓存大小
 #define IODP_RECV_MAX_LEN 1024
 //定义返回接受包DATA大小
 #define IODP_RETDATA_BUFFERSIZE 2048
+//定义发送区域大小
+#define IODP_SEND_BUFFERSIZE 1024
 //定义大小端
 #define IODP_ENDIAN             0       //0大端     1小端  
 
@@ -69,7 +71,12 @@
 #define IODP_PROC_ERROR_VER         -2      //版本不兼容
 #define IODP_PROC_ERROR_TYPE        -3      //包类型不识别
 #define IODP_PROC_ERROR_CHECK       -4      //校验失败
+#define IODP_PROC_ERROR_CONTENT     -5      //内容格式错误
 
+
+
+//--------------package error code 放在错误类型帧上的错误代码，用户返回客户端
+#define IODP_ERRFREAM_NOCMD         0x81        //代表服务端没找到对应cmd
 
 
 #define IODP_LOG printf
@@ -80,10 +87,10 @@ typedef struct
 {
     uint32_t cmd;
     uint32_t len;
-    void* data;
+    const uint8_t* data;
     //返回数据
-    uint32_t retlen;
-    void* retdata;
+    uint32_t* retlen;
+    uint8_t* retdata;
 }eIODP_FUNC_MSG;
 
 
@@ -146,13 +153,17 @@ typedef struct
     int32_t anadata_status;  //目前analyze_data的状态 0表示在解析中 1表示解析完成analyze_data中的数据是完整数据(除了头帧以外)
     eIODP_PACK_TYPE analyze_data;   //用于解析记录状态的结构体
     uint8_t content_data[IODP_RETDATA_BUFFERSIZE+12];    //主要内容数据  可以解析成不同形式
+    
+    
+    uint8_t send_buffer[IODP_SEND_BUFFERSIZE];
+    uint32_t send_len;      //send_buffer里要发送的数量
 
     //注册的服务函数链表
     eIODP_FUNC_NODE* pFuncHead;
 
     //iodevHandle设备的收发函数 一定要是非阻塞的
-    int (*iodevRead)(int, char*, int);
-    int (*iodevWrite)(int, char*, int);
+    int (*iodevRead)(char*, int);
+    int (*iodevWrite)(char*, int);
 
 }eIODP_TYPE;
 
@@ -170,7 +181,6 @@ typedef struct
 eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
                 int (*writefunc)(char*, int));
 
-
 /************************************************************
     @brief:
         注册服务函数
@@ -184,18 +194,6 @@ eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
 *************************************************************/
 int32_t eiodp_get_register(eIODP_TYPE* eiodp_fd,uint16_t cmd,
                 int (*callbackFunc)(eIODP_FUNC_MSG msg));
-
-
-/************************************************************
-    @brief:
-        打印已经注册的服务函数
-    @param:
-        eiodp_fd:eiodp句柄
-    @return:
-        <0 - 失败（error code）
-         0 - 成功
-*************************************************************/
-int32_t eiodpShowRegFunc(eIODP_TYPE* eiodp_fd);
 
 /************************************************************************
  * @brief 往协议栈输入数据
@@ -215,13 +213,15 @@ int32_t eiodp_put(eIODP_TYPE* eiodp_fd, uint8_t* data, uint32_t size);
  ************************************************************************/
 int32_t eiodp_process(eIODP_TYPE* eiodp_fd);
 
-
 /************************************************************************
- * @brief 打印出信息，与接收数据
+ * @brief 清楚输入输出
  * @param eiodp_fd 协议栈句柄
- * @param dataidx 接收数据索引
  ************************************************************************/
-void eiodp_info(eIODP_TYPE* eiodp_fd,uint32_t dataidx);
+void eiodp_clear(eIODP_TYPE* eiodp_fd);
+
+
+
+
 
 /************************************************************************
  * @brief 按照帧格式整理数据，整理好的数据放在cache里
@@ -232,6 +232,49 @@ void eiodp_info(eIODP_TYPE* eiodp_fd,uint32_t dataidx);
  * @return uint32_t 整理好的数据总长度
  ************************************************************************/
 uint32_t eiodp_pktset(uint8_t* cache,uint8_t* data, uint32_t len, uint8_t type);
+
+/************************************************************************
+ * @brief 按照协议格式整理数据，整理好的数据放在cache里，此为错误帧格式
+ * @param cache 用于存放整理好的数据，可以直接发送
+ * @param code 错误代码
+ * @return uint32_t 
+ ************************************************************************/
+uint32_t eiodp_pktset_typeErr(uint8_t* cache, uint8_t code);
+
+/************************************************************************
+ * @brief 按照协议格式整理数据，整理好的数据放在cache里，此为GET帧格式
+ * @param cache 用于存放整理好的数据，可以直接发送
+ * @param cmd 命令字
+ * @param data get传入参数数据
+ * @param len 数据长度的
+ * @return uint32_t 
+ ************************************************************************/
+uint32_t eiodp_pktset_typeGet(uint8_t* cache,uint32_t cmd, uint8_t* data, uint32_t len);
+
+
+
+
+
+
+
+
+/************************************************************************
+ * @brief 打印出信息，与接收数据
+ * @param eiodp_fd 协议栈句柄
+ * @param dataidx 接收数据索引
+ ************************************************************************/
+void eiodp_info(eIODP_TYPE* eiodp_fd,uint32_t dataidx);
+
+/************************************************************
+    @brief:
+        打印已经注册的服务函数
+    @param:
+        eiodp_fd:eiodp句柄
+    @return:
+        <0 - 失败（error code）
+         0 - 成功
+*************************************************************/
+int32_t eiodpShowRegFunc(eIODP_TYPE* eiodp_fd);
 
 
 //-----------------------------------------------------------------------------------
@@ -247,5 +290,6 @@ void delate_ring(eIODP_RING* p);
 int put_ring(eIODP_RING* p,uint8_t* buf,uint32_t size);
 int get_ring(eIODP_RING* p,uint8_t* buf,uint32_t size);
 uint32_t size_ring(eIODP_RING* p);
+void clear_ring(eIODP_RING* p);
 
 #endif
