@@ -26,7 +26,9 @@ void demoMain::on_btn_conn_clicked()
         ui->btn_conn->setText("连接");
         return;
     }
-    qiodp_fd->tcpConn("127.0.0.1",6666);
+    QString ipstr = ui->le_ip->text();
+    uint16_t port = ui->le_port->text().toUInt();
+    qiodp_fd->tcpConn(ipstr,port);
     int outtime = 0;
     ui->btn_conn->setDisabled(true);
     while (1) {
@@ -54,6 +56,8 @@ void demoMain::on_btn_send_clicked()
     QString sdataStr = ui->te_sdata->toPlainText();
     QStringList strList = sdataStr.split(" ");
 
+    ui->btn_send->setDisabled(true);
+
     for(auto e:strList){
         sbuf.push_back(e.toUInt(nullptr,16));
     }
@@ -66,4 +70,16 @@ void demoMain::on_btn_send_clicked()
         logout += " ";
     }
     ui->tb_log->append(logout);
+    ui->btn_send->setDisabled(false);
+}
+
+void demoMain::on_btn_clean_clicked()
+{
+    ui->tb_log->clear();
+}
+
+//压力测试
+void demoMain::on_btn_alltest_clicked()
+{
+
 }

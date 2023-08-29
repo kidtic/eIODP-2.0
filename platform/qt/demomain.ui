@@ -158,6 +158,15 @@ p, li { white-space: pre-wrap; }
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
+         <widget class="QComboBox" name="comboBox">
+          <item>
+           <property name="text">
+            <string>数据自加请求</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="btn_alltest">
           <property name="text">
            <string>压力测试</string>

@@ -33,18 +33,34 @@ public:
     //返回连接状态
     bool isConnect(void);
 
-    //如果是TCP客户端，调用连接（非阻塞，调用后使用isConnect检查）
+    /**
+     * @brief 如果是TCP客户端，调用连接（非阻塞，调用后使用isConnect检查）
+     * 
+     * @param ip 
+     * @param port 
+     * @return qint32 
+     */
     qint32 tcpConn(QString ip, quint16 port);
 
-    //get请求
+    /**
+     * @brief 调用get请求
+     * @param cmd 命令字
+     * @param data 输入数据
+     * @return QByteArray 返回数据
+     */
     QByteArray requestGET(quint32 cmd, QByteArray data);
 
-    //断开
+    /**
+     * @brief 断开TCP连接
+     * 
+     */
     void tcpClose(void);
 
 
 private: //data
     bool connStatus;    //连接状态
+    Mode_t m_mode;
+    ConnType_t m_connType;
     QTcpSocket* tcp_fd;
     eIODP_TYPE* eiodp_fd;
     uint8_t recvBuf[2048];

@@ -2,6 +2,7 @@
     "files.associations": {
         "*.ejs": "html",
         "eiodp.h": "c",
-        "stdint.h": "c"
-    }
-}
+        "stdint.h": "c",
+        "stdlib.h": "c",
+        "winsock2.h": "c",
+       

@@ -22,6 +22,10 @@ private slots:
     void on_btn_send_clicked();
 
 
+    void on_btn_clean_clicked();
+
+    void on_btn_alltest_clicked();
+
 private:
     Ui::demoMain *ui;
     Qiodp* qiodp_fd;

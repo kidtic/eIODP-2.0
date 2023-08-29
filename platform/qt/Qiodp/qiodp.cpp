@@ -7,6 +7,7 @@
 
 Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
 {
+    
     if(mode == CLIENT){
         eiodp_fd = eiodp_init(IODP_MODE_CLIENT,NULL,NULL);
     }
@@ -15,6 +16,9 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
         return;
         //eiodp_fd = eiodp_init(IODP_MODE_SERVER,NULL,NULL);
     }
+
+    m_mode = mode;
+    m_connType = connType;
 
     tcp_fd = new QTcpSocket(this);
     connStatus = false;
@@ -48,8 +52,13 @@ bool Qiodp::isConnect(void)
 //如果是TCP客户端，调用连接
 qint32 Qiodp::tcpConn(QString ip, quint16 port)
 {
+    if(m_connType != TCP){
+        qDebug()<<"error 当前链接模式非TCP";
+        emit uilog("error 当前链接模式非TCP");
+        return -1;
+    }
     tcp_fd->connectToHost(ip,port);
-
+    return 0;
 }
 
 void Qiodp::tcpClose(void)
@@ -88,7 +97,7 @@ QByteArray Qiodp::requestGET(quint32 cmd, QByteArray data)
 
         qApp->processEvents();
         outtime++;
-        if(outtime > 100000000){
+        if(outtime > 100000){
             qDebug()<<"request outtime";
             emit uilog("request outtime");
             return retdata;
