@@ -16,7 +16,14 @@ public:
     demoMain(QWidget *parent = nullptr);
     ~demoMain();
 
+private slots:
+    void on_btn_conn_clicked();
+
+    void on_btn_send_clicked();
+
+
 private:
     Ui::demoMain *ui;
+    Qiodp* qiodp_fd;
 };
 #endif // DEMOMAIN_H

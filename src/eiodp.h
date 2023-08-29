@@ -181,6 +181,13 @@ typedef struct
 eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
                 int (*writefunc)(char*, int));
 
+/***********************************************************************
+ * @brief 销毁句柄
+ * @param eiodp_fd eiodp句柄
+ * @return int32_t 0成功
+ ***********************************************************************/
+int32_t eiodp_destroy(eIODP_TYPE* eiodp_fd);
+
 /************************************************************
     @brief:
         注册服务函数
@@ -203,6 +210,22 @@ int32_t eiodp_get_register(eIODP_TYPE* eiodp_fd,uint16_t cmd,
  * @return int32_t 实际插入数据
  ************************************************************************/
 int32_t eiodp_put(eIODP_TYPE* eiodp_fd, uint8_t* data, uint32_t size);
+
+/**
+ * @brief 客户端调用的接口，GET请求
+ * @param eiodp_fd 协议栈句柄
+ * @param cmd 请求命令字
+ * @param data 输入参数
+ * @param len 输入参数长度
+ * @param retData 返回数据
+ * @param maxretlen retData的容量
+ * @return int32_t 返回数据长度  负数为错误
+ */
+int32_t eiodp_request_GET(
+    eIODP_TYPE* eiodp_fd, uint32_t cmd, 
+    uint8_t* data, uint32_t len,
+    uint8_t* retData, uint32_t maxretlen
+);
 
 /************************************************************************
  * @brief 用于解析ringbuf里的数据

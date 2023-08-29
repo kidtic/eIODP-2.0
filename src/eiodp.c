@@ -48,8 +48,8 @@ static void _num2byte(uint8_t* buf, uint32_t num)
 /***********************************************************************
  * @brief 初始化框架
  * @param mode 0服务器 1客户端
- * @param readfunc 读取函数 服务端可以为空 客户端不能为空
- * @param writefunc 发送函数 不能为空
+ * @param readfunc 读取函数 
+ * @param writefunc 发送函数 
  * @return eIODP_TYPE* 创建的eIODP_TYPE指针，可以通过这个指针来操作iodp
  ***********************************************************************/
 eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
@@ -60,15 +60,7 @@ eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
         IODP_LOGMSG("error: eiodp_init mode\n");
         return NULL;
     }
-    if(mode == IODP_MODE_CLIENT && readfunc ==NULL){
-        IODP_LOGMSG("error: mode == IODP_MODE_CLIENT && readfunc ==NULL\n");
-        return NULL;
-    }
-    if(writefunc == NULL)
-    {
-        IODP_LOGMSG("error: writefunc == NULL\n");
-        return NULL;
-    }
+    
 
     eIODP_TYPE* pDev = MOONOS_MALLOC(sizeof(eIODP_TYPE));
     if(pDev == NULL)return NULL;
@@ -108,6 +100,17 @@ fail_recvrbuf:
     return NULL;
 }
 
+/***********************************************************************
+ * @brief 销毁句柄
+ * @param eiodp_fd eiodp句柄
+ * @return int32_t 0成功
+ ***********************************************************************/
+int32_t eiodp_destroy(eIODP_TYPE* eiodp_fd)
+{
+    delate_ring(eiodp_fd->recv_ringbuf);
+    MOONOS_FREE(eiodp_fd);
+    return 0;
+}
 
 //通过cmd找到服务函数node
 static eIODP_FUNC_NODE* findFuncNode(eIODP_FUNC_NODE* pHead,uint16_t cmd)
@@ -449,6 +452,11 @@ int32_t eiodp_process(eIODP_TYPE* eiodp_fd)
         if(pdata->type == IODP_PTC_TYPE_RETURN){
             eiodp_fd->anadata_status = 1;
             eiodp_fd->ana_size = 0;
+            //解析以下方便取数
+            eIODP_RETDATA_TYPE* pData = (eIODP_RETDATA_TYPE*)eiodp_fd->content_data;
+            pData->cnt = _byte2num((uint8_t*)&pData->cnt);
+            pData->allpack = _byte2num((uint8_t*)&pData->allpack);
+            pData->len = _byte2num((uint8_t*)&pData->len);
             return 101;     //可以直接调用函数取出retdata
         }
         else if(pdata->type == IODP_PTC_TYPE_ERROR){
@@ -497,6 +505,10 @@ int32_t eiodp_request_GET(
 )
 {
     uint8_t rbuf[128];
+    //clear
+    eiodp_clear(eiodp_fd);
+
+
     eiodp_fd->send_len = eiodp_pktset_typeGet(eiodp_fd->send_buffer,cmd,data,len);
     if(eiodp_fd->iodevWrite == NULL){
         IODP_LOG("iodevWrite = NULL\r\n");
@@ -506,8 +518,7 @@ int32_t eiodp_request_GET(
         IODP_LOG("iodevRead = NULL\r\n");
         return -2;
     }
-    //clear
-    eiodp_clear(eiodp_fd);
+    
 
     eiodp_fd->iodevWrite(eiodp_fd->send_buffer,eiodp_fd->send_len);
 
@@ -639,7 +650,7 @@ uint32_t eiodp_pktset_typeGet(uint8_t* cache,uint32_t cmd, uint8_t* data, uint32
     cache[4] = 2; 
     cache[5] = IODP_PTC_MAJOR; 
     cache[6] = IODP_PTC_VERSION;
-    cache[7] = IODP_PTC_TYPE_RETURN;
+    cache[7] = IODP_PTC_TYPE_GET;
     _num2byte(&cache[8], len+12);   //content size
     //内容
     _num2byte(&cache[12], (uint32_t)0);     //CNT  暂时不用

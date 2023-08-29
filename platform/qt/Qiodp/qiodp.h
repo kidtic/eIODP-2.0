@@ -9,6 +9,8 @@ extern "C"{
 #include <QThread>
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QNetworkInterface>
+#include <QHostInfo>
 
 class Qiodp : public QThread
 {
@@ -31,22 +33,29 @@ public:
     //返回连接状态
     bool isConnect(void);
 
-    //如果是TCP客户端，调用连接
+    //如果是TCP客户端，调用连接（非阻塞，调用后使用isConnect检查）
     qint32 tcpConn(QString ip, quint16 port);
 
     //get请求
-    QArrayData requestGET(quint32 cmd, QArrayData data);
+    QByteArray requestGET(quint32 cmd, QByteArray data);
+
+    //断开
+    void tcpClose(void);
 
 
 private: //data
-    bool connStatus;
+    bool connStatus;    //连接状态
+    QTcpSocket* tcp_fd;
+    eIODP_TYPE* eiodp_fd;
+    uint8_t recvBuf[2048];
 
 
 
 private slots:  //槽，模块输入
 
-
 signals:        //信号，模块输出
+    //用于向UI输出打印信息
+    void uilog(QString str);
 
 };
 
