@@ -9,7 +9,7 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
 {
     
     if(mode == CLIENT){
-        eiodp_fd = eiodp_init(IODP_MODE_CLIENT,NULL,NULL);
+        eiodp_fd = eiodp_init(IODP_MODE_CLIENT,NULL,NULL,0);
     }
     else{
         qDebug()<<"目前QT不支持服务端";
@@ -97,7 +97,7 @@ QByteArray Qiodp::requestGET(quint32 cmd, QByteArray data)
 
         qApp->processEvents();
         outtime++;
-        if(outtime > 100000){
+        if(outtime > 1000000){
             qDebug()<<"request outtime";
             emit uilog("request outtime");
             return retdata;

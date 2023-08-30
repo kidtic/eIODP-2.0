@@ -21,9 +21,9 @@ void main(int argc, char **argv)
 		fprintf(stderr, "UseageL %s [ip] [port]\n", argv[0]);
 	}
 
-    IODP_TCP_TYPE* myfd = iodptcp_init(IODP_MODE_SERVER, argv[1], atoi(argv[2]));
+    IODP_TCP_TYPE* myfd = iodptcp_init_server(argv[1], atoi(argv[2]));
 
-    iodptcp_addFunc(myfd, 0x01, myfunc);
+    iodptcp_addFunc(myfd, 0x10, myfunc);
 
     /* code */
     while(1);

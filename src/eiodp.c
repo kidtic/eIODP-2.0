@@ -50,17 +50,17 @@ static void _num2byte(uint8_t* buf, uint32_t num)
  * @param mode 0服务器 1客户端
  * @param readfunc 读取函数 
  * @param writefunc 发送函数 
+ * @param rw_fd 通讯句柄，用于发送与接收函数
  * @return eIODP_TYPE* 创建的eIODP_TYPE指针，可以通过这个指针来操作iodp
  ***********************************************************************/
 eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
-                int (*writefunc)(char*, int))
+                int (*writefunc)(char*, int), int rw_fd)
 {
     //检查入参
     if(mode>1){
         IODP_LOGMSG("error: eiodp_init mode\n");
         return NULL;
     }
-    
 
     eIODP_TYPE* pDev = MOONOS_MALLOC(sizeof(eIODP_TYPE));
     if(pDev == NULL)return NULL;
@@ -75,6 +75,7 @@ eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
     pDev->mode = mode;
     pDev->iodevRead = readfunc;
     pDev->iodevWrite = writefunc;
+    pDev->rw_fd = rw_fd;
     pDev->pFuncHead = NULL;
     pDev->ana_size = 0;
 
@@ -110,6 +111,20 @@ int32_t eiodp_destroy(eIODP_TYPE* eiodp_fd)
     delate_ring(eiodp_fd->recv_ringbuf);
     MOONOS_FREE(eiodp_fd);
     return 0;
+}
+
+/***********************************************************************
+ * @brief 修改通讯句柄
+ * @param rw_fd 
+ * @return int32_t 
+ ***********************************************************************/
+int32_t eiodp_rwfd(eIODP_TYPE* eiodp_fd, int rw_fd)
+{
+    if(eiodp_fd == NULL)
+    {
+        return IODP_ERROR_PARAM;
+    }
+    eiodp_fd->rw_fd = rw_fd;
 }
 
 //通过cmd找到服务函数node
@@ -267,9 +282,6 @@ static void eiodp_process_get(eIODP_TYPE* eiodp_fd)
     if(funcNode==NULL){
         //未找到cmd
         eiodp_fd->send_len = eiodp_pktset_typeErr(eiodp_fd->send_buffer,IODP_ERRFREAM_NOCMD);
-        if(eiodp_fd->iodevWrite!=NULL){
-            eiodp_fd->iodevWrite(eiodp_fd->send_buffer,eiodp_fd->send_len);
-        }
         return;
     }
     eIODP_FUNC_MSG msg;
@@ -307,9 +319,6 @@ static void eiodp_process_get(eIODP_TYPE* eiodp_fd)
     _num2byte(&eiodp_fd->send_buffer[24+retlen],sum);
     
     eiodp_fd->send_len = retlen + 28;
-    if(eiodp_fd->iodevWrite!=NULL){
-        eiodp_fd->iodevWrite(eiodp_fd->send_buffer,eiodp_fd->send_len);
-    }
 
 }
 
@@ -322,7 +331,9 @@ static void eiodp_process_get(eIODP_TYPE* eiodp_fd)
  ************************************************************************/
 int32_t eiodp_process(eIODP_TYPE* eiodp_fd)
 {
-    
+    if(eiodp_fd == NULL){
+        return IODP_ERROR_PARAM;
+    }
     //查看rinfbuf
     if(size_ring(eiodp_fd->recv_ringbuf)==0){
         return 0;
@@ -441,6 +452,13 @@ int32_t eiodp_process(eIODP_TYPE* eiodp_fd)
         if(pdata->type == IODP_PTC_TYPE_GET){
             //get解析函数
             eiodp_process_get(eiodp_fd);
+            int rr;
+            if(eiodp_fd->iodevWrite!=NULL){
+                rr = eiodp_fd->iodevWrite(eiodp_fd->rw_fd, eiodp_fd->send_buffer, eiodp_fd->send_len);
+                if(rr < 0){
+                    return IODP_PROC_ERROR_SEND;
+                }
+            }
         }
         else if(pdata->type == IODP_PTC_TYPE_POST){
             //post解析函数
@@ -485,6 +503,9 @@ int32_t eiodp_process(eIODP_TYPE* eiodp_fd)
  ************************************************************************/
 int32_t eiodp_put(eIODP_TYPE* eiodp_fd, uint8_t* data, uint32_t size)
 {
+    if(eiodp_fd == NULL){
+        return IODP_ERROR_PARAM;
+    }
     return put_ring(eiodp_fd->recv_ringbuf, data, size);
 }
 
@@ -504,6 +525,9 @@ int32_t eiodp_request_GET(
     uint8_t* retData, uint32_t maxretlen
 )
 {
+    if(eiodp_fd == NULL){
+        return IODP_ERROR_PARAM;
+    }
     uint8_t rbuf[128];
     //clear
     eiodp_clear(eiodp_fd);
@@ -519,15 +543,18 @@ int32_t eiodp_request_GET(
         return -2;
     }
     
-
-    eiodp_fd->iodevWrite(eiodp_fd->send_buffer,eiodp_fd->send_len);
+    int rr;
+    rr = eiodp_fd->iodevWrite(eiodp_fd->rw_fd,eiodp_fd->send_buffer,eiodp_fd->send_len);
+    if(rr<0){
+        return IODP_PROC_ERROR_SEND;
+    }
 
     int ret = 0;
     int32_t rlen=0;
     uint32_t outtime = 0;
     while (ret >= 0)
     {
-        rlen = eiodp_fd->iodevRead(rbuf,128);   //必须无阻塞
+        rlen = eiodp_fd->iodevRead(eiodp_fd->rw_fd, rbuf, 128);   //必须无阻塞
         if(rlen<0){
             IODP_LOG("iodevRead error ret = %d\r\n",rlen);
             return -3;
@@ -565,6 +592,9 @@ int32_t eiodp_request_GET(
  ************************************************************************/
 void eiodp_clear(eIODP_TYPE* eiodp_fd)
 {
+    if(eiodp_fd == NULL){
+        return IODP_ERROR_PARAM;
+    }
     clear_ring(eiodp_fd->recv_ringbuf);
     eiodp_fd->ana_size = 0;
     eiodp_fd->anadata_status = 0;
@@ -580,6 +610,9 @@ void eiodp_clear(eIODP_TYPE* eiodp_fd)
  ************************************************************************/
 void eiodp_info(eIODP_TYPE* eiodp_fd,uint32_t dataidx)
 {
+    if(eiodp_fd == NULL){
+        return IODP_ERROR_PARAM;
+    }
     int i=0;
     IODP_LOG("analyzeRecv size:%d\r\n", eiodp_fd->ana_size);
     IODP_LOG("analyzeData status:%d\r\n",eiodp_fd->anadata_status);
@@ -608,6 +641,9 @@ void eiodp_info(eIODP_TYPE* eiodp_fd,uint32_t dataidx)
  ************************************************************************/
 uint32_t eiodp_pktset(uint8_t* cache,uint8_t* data, uint32_t len, uint8_t type)
 {
+    if(cache == NULL || data == NULL){
+        return IODP_ERROR_PARAM;
+    }
     int i=0;
     memcpy(cache,fhead,4);
     cache[4] = 2; cache[5]=IODP_PTC_MAJOR; cache[6]=IODP_PTC_VERSION;
@@ -633,6 +669,9 @@ uint32_t eiodp_pktset(uint8_t* cache,uint8_t* data, uint32_t len, uint8_t type)
  ************************************************************************/
 uint32_t eiodp_pktset_typeErr(uint8_t* cache, uint8_t code)
 {
+    if(cache == NULL){
+        return IODP_ERROR_PARAM;
+    }
     return eiodp_pktset(cache, &code, 1, IODP_PTC_TYPE_ERROR);
 }
 
@@ -646,6 +685,9 @@ uint32_t eiodp_pktset_typeErr(uint8_t* cache, uint8_t code)
  ************************************************************************/
 uint32_t eiodp_pktset_typeGet(uint8_t* cache,uint32_t cmd, uint8_t* data, uint32_t len)
 {
+    if(cache == NULL || data == NULL){
+        return IODP_ERROR_PARAM;
+    }
     memcpy(cache, fhead, 4);
     cache[4] = 2; 
     cache[5] = IODP_PTC_MAJOR; 

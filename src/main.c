@@ -4,15 +4,15 @@
 #include "eiodp.h"
 #include "time.h"
 
-int zrecv(char* buf, int size)
+int zrecv(int fd, char* buf, int size)
 {
 
 }
 
-int zsend(uint8_t* buf, int size)
+int zsend(int fd, uint8_t* buf, int size)
 {
     int i=0;
-    printf("send:");
+    printf("send %d:",fd);
     for(i=0; i<size;i++)
     {
         if(i%8==0)printf("\r\n");
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 {
     int i;
     int ret = 0;
-    eIODP_TYPE* eiodp_fd = eiodp_init(IODP_MODE_SERVER, zrecv, zsend);
+    eIODP_TYPE* eiodp_fd = eiodp_init(IODP_MODE_SERVER, zrecv, zsend, 100);
 
     srand(time(NULL));
 

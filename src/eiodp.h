@@ -72,7 +72,7 @@
 #define IODP_PROC_ERROR_TYPE        -3      //包类型不识别
 #define IODP_PROC_ERROR_CHECK       -4      //校验失败
 #define IODP_PROC_ERROR_CONTENT     -5      //内容格式错误
-
+#define IODP_PROC_ERROR_SEND        -100    //发送错误
 
 
 //--------------package error code 放在错误类型帧上的错误代码，用户返回客户端
@@ -162,8 +162,9 @@ typedef struct
     eIODP_FUNC_NODE* pFuncHead;
 
     //iodevHandle设备的收发函数 一定要是非阻塞的
-    int (*iodevRead)(char*, int);
-    int (*iodevWrite)(char*, int);
+    int (*iodevRead)(int ,char*, int);
+    int (*iodevWrite)(int ,char*, int);
+    int rw_fd;
 
 }eIODP_TYPE;
 
@@ -176,10 +177,11 @@ typedef struct
  * @param mode 0服务器 1客户端
  * @param readfunc 读取函数 服务端可以为空
  * @param writefunc 发送函数
+ * @param rw_fd 通讯句柄，用于发送与接收函数
  * @return eIODP_TYPE* 创建的eIODP_TYPE指针，可以通过这个指针来操作iodp
  ***********************************************************************/
 eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
-                int (*writefunc)(char*, int));
+                int (*writefunc)(char*, int),int rw_fd);
 
 /***********************************************************************
  * @brief 销毁句柄
@@ -187,6 +189,13 @@ eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
  * @return int32_t 0成功
  ***********************************************************************/
 int32_t eiodp_destroy(eIODP_TYPE* eiodp_fd);
+
+/***********************************************************************
+ * @brief 修改通讯句柄
+ * @param rw_fd 
+ * @return int32_t 
+ ***********************************************************************/
+int32_t eiodp_rwfd(eIODP_TYPE* eiodp_fd, int rw_fd);
 
 /************************************************************
     @brief:

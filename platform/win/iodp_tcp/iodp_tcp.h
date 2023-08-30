@@ -26,7 +26,7 @@ typedef struct
 
 
 //初始化
-IODP_TCP_TYPE* iodptcp_init(unsigned int mode, const char* ip, uint16_t port);
+IODP_TCP_TYPE* iodptcp_init_server(const char* ip, uint16_t port);
 
 //添加服务函数
 int32_t iodptcp_addFunc(IODP_TCP_TYPE* tcpdp, uint32_t cmd, int (*callbackFunc)(eIODP_FUNC_MSG msg));
