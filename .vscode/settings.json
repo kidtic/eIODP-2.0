@@ -5,4 +5,6 @@
         "stdint.h": "c",
         "stdlib.h": "c",
         "winsock2.h": "c",
-       
+        "iodp_tcp_win.h": "c"
+    }
+}

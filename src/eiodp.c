@@ -1,6 +1,7 @@
 /**
  * @file eiodp.c
  * @brief 嵌入式通用io数据协议框架 2.0
+ *          模块依赖：stdint、stdlib、stdio、string
  * @author zouzhiqiang (592113107@qq.com)
  * @version 2.0
  * @date 2023-08-26

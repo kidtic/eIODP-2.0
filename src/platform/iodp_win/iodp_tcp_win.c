@@ -1,6 +1,5 @@
-#include "iodp_tcp.h"
+#include "iodp_tcp_win.h"
 
-//#pragma comment(lib, "ws2_32.lib")   //网络库文件
 
 static void InitNetwork() {
 	DWORD wVersionRequested;
@@ -90,12 +89,12 @@ int tcpsend(int fd, uint8_t* buf, int size)
 }
 
 
-/**
+/***********************************************************************
  * @brief 初始化服务端接口
  * @param ip 本地IP地址 默认0.0.0.0
  * @param port 端口号
  * @return IODP_TCP_TYPE* 
- */
+ ***********************************************************************/
 IODP_TCP_TYPE* iodptcp_init_server(const char* ip, uint16_t port)
 {
     InitNetwork();
@@ -138,6 +137,7 @@ IODP_TCP_TYPE* iodptcp_init_server(const char* ip, uint16_t port)
     IODP_TCP_TYPE* pDev = (IODP_TCP_TYPE*)malloc(sizeof(IODP_TCP_TYPE));
     pDev->sock_fd = sockfd;
     pDev->serveraddr = serveraddr;
+    pDev->mode = IODP_MODE_SERVER;
     //服务端只需要发送便可
     pDev->eiodp_fd = eiodp_init(IODP_MODE_SERVER, NULL,tcpsend,sockfd);
     printf("pthread_create\r\n");
@@ -147,10 +147,10 @@ IODP_TCP_TYPE* iodptcp_init_server(const char* ip, uint16_t port)
 }
 
 
-/**
+/***********************************************************************
  * @brief 初始化客户端接口
  * @return IODP_TCP_TYPE* 
- */
+ ***********************************************************************/
 IODP_TCP_TYPE* iodptcp_init_client(void)
 {
     InitNetwork();
@@ -181,21 +181,101 @@ IODP_TCP_TYPE* iodptcp_init_client(void)
         return NULL;
     }
     pDev->sock_fd = sockfd;
+    pDev->mode = IODP_MODE_CLIENT;
     pDev->eiodp_fd = eiodp_init(IODP_MODE_CLIENT, tcprecv,tcpsend,sockfd);
 
     return pDev;
 }
 
-//添加服务函数
+/***********************************************************************
+ * @brief 客户端用于连接服务器
+ * @param pDev tcpiodp通讯句柄
+ * @param ip 远程服务端ip
+ * @param port 远程服务端 端口号
+ * @return int32_t 
+ ***********************************************************************/
+int32_t iodptcp_connect(IODP_TCP_TYPE* pDev, const char* ip, uint16_t port)
+{
+    if(pDev == NULL || ip == NULL)
+    {
+        return -1;
+    }
+    if(pDev->mode != IODP_MODE_CLIENT)
+    {
+        return -2;
+    }
+    int ret;
+    struct sockaddr_in server_addr = {0};	
+	server_addr.sin_family = AF_INET;                       // 设置地址族为IPv4
+	server_addr.sin_port = htons(port);						// 设置地址的端口号信息
+	server_addr.sin_addr.s_addr = inet_addr(ip);	        //　设置IP地址
+    // 3、链接到服务器
+    ret = connect(pDev->sock_fd, (const struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (ret < 0){
+        perror("connect");
+        return -3;
+    }
+    else{
+        printf("connect result, ret = %d.\n", ret);
+        return 0;
+    }
+	    
+}
+
+/***********************************************************************
+ * @brief 客户端调用的接口，GET请求
+ * @param pDev 协议栈句柄
+ * @param cmd 请求命令字
+ * @param data 输入参数
+ * @param len 输入参数长度
+ * @param retData 返回数据
+ * @param maxretlen retData的容量
+ * @return int32_t 返回数据长度  负数为错误
+ ***********************************************************************/
+int32_t iodptcp_request_get(
+    IODP_TCP_TYPE* pDev, uint32_t cmd, 
+    uint8_t* data, uint32_t len, 
+    uint8_t* rdata, uint32_t maxretlen
+)
+{
+    if(pDev == NULL)
+    {
+        return -1;
+    }
+    return eiodp_request_GET(pDev->eiodp_fd,cmd,data,len,rdata,maxretlen);
+}
+
+/***********************************************************************
+ * @brief 添加服务函数
+ * @param tcpdp tcpiodp通讯句柄
+ * @param cmd 命令子
+ * @param callbackFunc 回调函数
+ * @return int32_t <0 错误 0成功
+ ***********************************************************************/
 int32_t iodptcp_addFunc(IODP_TCP_TYPE* tcpdp, uint32_t cmd, int (*callbackFunc)(eIODP_FUNC_MSG msg))
 {
+    if(tcpdp == NULL)
+    {
+        return -1;
+    }
+    if(tcpdp->mode != IODP_MODE_SERVER)
+    {
+        return -2;
+    }
     return eiodp_get_register(tcpdp->eiodp_fd, cmd, callbackFunc);
 }
 
 
-
+/***********************************************************************
+ * @brief 关闭
+ * @param tcpdp tcpiodp通讯句柄
+ ***********************************************************************/
 void iodptcp_close(IODP_TCP_TYPE* tcpdp)
 {
+    if(tcpdp == NULL)
+    {
+        return -1;
+    }
     pthread_cancel(tcpdp->pth);
     eiodp_destroy(tcpdp->eiodp_fd);
     free(tcpdp);

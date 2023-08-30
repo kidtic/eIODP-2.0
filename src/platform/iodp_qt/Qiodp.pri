@@ -7,11 +7,11 @@ CONFIG += c++11
 
 HEADERS += \
     $$PWD/qiodp.h \
-    $$PWD/../../../src/eiodp.h
+    $$PWD/../../eiodp.h
 
 SOURCES += \
     $$PWD/qiodp.cpp \
-    $$PWD/../../../src/eiodp.c
+    $$PWD/../../eiodp.c
 
-INCLUDEPATH += $$PWD/../../../src \
-                $$PWD
+INCLUDEPATH += $$PWD/../../ \
+               $$PWD

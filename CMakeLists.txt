@@ -27,7 +27,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 message("++++++++++++++++++++Start Build++++++++++++++++++++++++++")
 
 # 头文件搜索目录
-include_directories(${PROJECT_SOURCE_DIR}/src/)
+include_directories(${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/include)
 
 # 链接库搜索目录
 link_directories(${PROJECT_BINARY_DIR}/lib /usr/local/lib /usr/lib)
@@ -35,20 +35,21 @@ link_directories(${PROJECT_BINARY_DIR}/lib /usr/local/lib /usr/lib)
 
 #设置链接库
 if (WIN32)
-link_libraries(wsock32)
+        link_libraries(wsock32)
+        add_library(${PROJECT_NAME}_win STATIC
+                src/eiodp.c 
+                src/platform/iodp_win/iodp_tcp_win.c
+        )
+        # 可执行文件
+        add_executable(main src/main.c)
+        target_link_libraries(main ${PROJECT_NAME}_win)
+
+        # 可执行文件
+        add_executable(server_demo demo/win/server_demo.c)
+        target_link_libraries(server_demo ${PROJECT_NAME}_win)
 endif()
 
-add_library(${PROJECT_NAME} STATIC
-        src/eiodp.c 
-
-)
 
 
-
-
-# 可执行文件
-
-add_executable(main src/main.c)
-target_link_libraries(main ${PROJECT_NAME})
 
 

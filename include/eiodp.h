@@ -1,3 +1,13 @@
+/**
+ * @file eiodp.h
+ * @brief 嵌入式通用io数据协议框架 2.0 头文件 用于提供客户接口
+ * @author zouzhiqiang (592113107@qq.com)
+ * @version 2.0
+ * @date 2023-08-30
+ * @copyright Copyright (c) 2023 zouzhiqiang
+ * @note
+ * 
+ */
 #ifndef _EIODP_H_
 #define _EIODP_H_
 #include "stdint.h"
