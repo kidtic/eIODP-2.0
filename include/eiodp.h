@@ -19,9 +19,9 @@
 //定义接受环形缓存大小
 #define IODP_RECV_MAX_LEN 1024
 //定义返回接受包DATA大小
-#define IODP_RETDATA_BUFFERSIZE 2048
+#define IODP_RETDATA_BUFFERSIZE 4096
 //定义发送区域大小
-#define IODP_SEND_BUFFERSIZE 1024
+#define IODP_SEND_BUFFERSIZE 4096
 //定义大小端
 #define IODP_ENDIAN             0       //0大端     1小端  
 
@@ -190,8 +190,8 @@ typedef struct
  * @param rw_fd 通讯句柄，用于发送与接收函数
  * @return eIODP_TYPE* 创建的eIODP_TYPE指针，可以通过这个指针来操作iodp
  ***********************************************************************/
-eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
-                int (*writefunc)(char*, int),int rw_fd);
+eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(int, char*, int),
+                int (*writefunc)(int, char*, int),int rw_fd);
 
 /***********************************************************************
  * @brief 销毁句柄

@@ -54,8 +54,8 @@ static void _num2byte(uint8_t* buf, uint32_t num)
  * @param rw_fd 通讯句柄，用于发送与接收函数
  * @return eIODP_TYPE* 创建的eIODP_TYPE指针，可以通过这个指针来操作iodp
  ***********************************************************************/
-eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(char*, int),
-                int (*writefunc)(char*, int), int rw_fd)
+eIODP_TYPE* eiodp_init(unsigned int mode, int (*readfunc)(int, char*, int),
+                int (*writefunc)(int, char*, int), int rw_fd)
 {
     //检查入参
     if(mode>1){

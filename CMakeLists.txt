@@ -47,6 +47,14 @@ if (WIN32)
         # 可执行文件
         add_executable(server_demo demo/win/server_demo.c)
         target_link_libraries(server_demo ${PROJECT_NAME}_win)
+
+        # 可执行文件
+        add_executable(client_demo demo/win/client_demo.c)
+        target_link_libraries(client_demo ${PROJECT_NAME}_win)
+
+        # 可执行文件
+        add_executable(test demo/win/test.c)
+        target_link_libraries(test ${PROJECT_NAME}_win)
 endif()
 
 

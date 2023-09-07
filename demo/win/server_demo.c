@@ -3,7 +3,7 @@
 #include "iodp_tcp_win.h"
 
 
-
+//把每个数自+1
 void myfunc(eIODP_FUNC_MSG msg)
 {
     int i = 0;
