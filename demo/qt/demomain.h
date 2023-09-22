@@ -2,7 +2,8 @@
 #define DEMOMAIN_H
 
 #include <QWidget>
-#include "Qiodp/qiodp.h"
+#include "qiodp.h"
+#include "QTimer"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class demoMain; }
@@ -16,6 +17,13 @@ public:
     demoMain(QWidget *parent = nullptr);
     ~demoMain();
 
+    void updateSerialCB(void);
+
+    void new_eiodpfd(void);
+    void delete_eiodpfd(void);
+
+    Qiodp* qiodp_fd;
+
 private slots:
     void on_btn_conn_clicked();
 
@@ -26,8 +34,17 @@ private slots:
 
     void on_btn_alltest_clicked();
 
+    void on_cb_connType_currentTextChanged(const QString &arg1);
+
+    void on_allTest(void);
+
 private:
     Ui::demoMain *ui;
-    Qiodp* qiodp_fd;
+
+    QTimer m_testTimer;
+
+    int errorcnt;
+    int okcnt;
+
 };
 #endif // DEMOMAIN_H

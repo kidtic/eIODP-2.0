@@ -1,20 +1,41 @@
 {
+    "env": {
+        "qtPath": "D:/soft/Qt5.15/5.15.2/mingw81_32",
+        "qtToolPath":"D:/soft/Qt5.15/Tools/mingw810_32/i686-w64-mingw32"
+    },
     "configurations": [
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${qtPath}/include",
+                "${qtPath}/include/QtCore",
+                "${qtPath}/include/QtGui",
+                "${qtPath}/include/QtWidgets",
+                "${qtPath}/include/QtNetwork",
+                "${qtPath}/include/QtSerialPort",
+                "${qtPath}/include/QtSerialBus",
+                "${qtPath}/include/QtCharts",
+                "${qtToolPath}/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "10.0.19041.0",
-            "compilerPath": "C:\\soft\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin/gcc.exe",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${qtPath}/include",
+                    "${qtToolPath}/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.VC.db"
+            },
+            "intelliSenseMode": "${default}",
+            "compilerPath": "${qtPath}/bin/cl.exe",
             "cStandard": "c11",
-            "cppStandard": "c++11",
-            "intelliSenseMode": "windows-gcc-x64"
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

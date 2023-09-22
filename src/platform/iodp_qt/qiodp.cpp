@@ -9,7 +9,7 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
 {
     
     if(mode == CLIENT){
-        eiodp_fd = eiodp_init(IODP_MODE_CLIENT,NULL,NULL,0);
+        eiodp_fd = eiodp_init(IODP_MODE_CLIENT,NULL,NULL,(int)this);
     }
     else{
         qDebug()<<"目前QT不支持服务端";
@@ -19,21 +19,39 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
 
     m_mode = mode;
     m_connType = connType;
-
-    tcp_fd = new QTcpSocket(this);
     connStatus = false;
-    //连接成功后
-    QObject::connect(tcp_fd,&QTcpSocket::connected,this,[&](){
-        connStatus = true;
 
-    });
+    if(m_connType == TCP)
+    {
+        tcp_fd = new QTcpSocket(this);
+        //连接成功后
+        QObject::connect(tcp_fd,&QTcpSocket::connected,this,[&](){
+            connStatus = true;
 
-    connect(tcp_fd,&QTcpSocket::readyRead,this,[&](){
-        int rlen;
-        rlen = tcp_fd->read((char*)recvBuf,1024);
-        eiodp_put(eiodp_fd, recvBuf, rlen);
-        qDebug()<<"recv tcp";
-    });
+        });
+
+        connect(tcp_fd,&QTcpSocket::readyRead,this,[&](){
+            int rlen;
+            rlen = tcp_fd->read((char*)recvBuf,1024);
+            eiodp_put(eiodp_fd, recvBuf, rlen);
+            qDebug()<<"recv tcp";
+        });
+    }
+    else if(m_connType == COM)
+    {
+        serial_fd = new QSerialPort();
+        connect(serial_fd,&QSerialPort::readyRead,this,[&](){
+            int rlen;
+            rlen = serial_fd->read((char*)recvBuf,1024);
+            eiodp_put(eiodp_fd, recvBuf, rlen);
+            qDebug()<<"recv serial";
+        });
+    }
+    else{
+        qDebug()<<"error 不支持的连接方式";
+        emit uilog("error 不支持的连接方式");
+    }
+    
 
 
 }
@@ -61,9 +79,42 @@ qint32 Qiodp::tcpConn(QString ip, quint16 port)
     return 0;
 }
 
-void Qiodp::tcpClose(void)
+//如果是COM客户端，调用打开接口
+qint32 Qiodp::serialOpen(QString name, quint32 band, QSerialPort::Parity par)
 {
-    tcp_fd->close();
+    if(m_connType != COM){
+        qDebug()<<"error 当前链接模式非COM";
+        emit uilog("error 当前链接模式非COM");
+        return -1;
+    }
+
+    serial_fd->setPortName(name);
+    serial_fd->setBaudRate(band);
+    serial_fd->setDataBits(QSerialPort::Data8);
+    serial_fd->setParity(par);
+
+    if(serial_fd->open(QIODevice::ReadWrite))
+    {
+        connStatus = true;
+        return 0;
+    }
+    else{
+        qDebug()<<"error 无法打开串口";
+        emit uilog("error 无法打开串口");
+        return -2;
+    }
+    
+}
+
+void Qiodp::Close(void)
+{
+    if(m_connType == TCP){
+        tcp_fd->close();
+    }
+    else if(m_connType == COM){
+        serial_fd->close();
+    }
+
     connStatus = false;
 }
 
@@ -83,7 +134,12 @@ QByteArray Qiodp::requestGET(quint32 cmd, QByteArray data)
 
     eiodp_fd->send_len = eiodp_pktset_typeGet(eiodp_fd->send_buffer,cmd,(uint8_t*)data.data(),(uint32_t)data.size());
 
-    tcp_fd->write((const char*)eiodp_fd->send_buffer,eiodp_fd->send_len);
+    if(m_connType == TCP){
+        tcp_fd->write((const char*)eiodp_fd->send_buffer,eiodp_fd->send_len);
+    }
+    else if(m_connType == COM){
+        serial_fd->write((const char*)eiodp_fd->send_buffer,eiodp_fd->send_len);
+    }
     int ret = 0;
     int32_t rlen=0;
     uint32_t outtime = 0;

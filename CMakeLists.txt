@@ -27,7 +27,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 message("++++++++++++++++++++Start Build++++++++++++++++++++++++++")
 
 # 头文件搜索目录
-include_directories(${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/include)
+include_directories(
+        ${PROJECT_SOURCE_DIR}/src/ 
+        ${PROJECT_SOURCE_DIR}/src/platform/
+        ${PROJECT_SOURCE_DIR}/src/platform/iodp_linux/
+        ${PROJECT_SOURCE_DIR}/src/platform/iodp_win/
+        ${PROJECT_SOURCE_DIR}/src/platform/iodp_qt
+)
 
 # 链接库搜索目录
 link_directories(${PROJECT_BINARY_DIR}/lib /usr/local/lib /usr/lib)
@@ -52,9 +58,6 @@ if (WIN32)
         add_executable(client_demo demo/win/client_demo.c)
         target_link_libraries(client_demo ${PROJECT_NAME}_win)
 
-        # 可执行文件
-        add_executable(test demo/win/test.c)
-        target_link_libraries(test ${PROJECT_NAME}_win)
 endif()
 
 

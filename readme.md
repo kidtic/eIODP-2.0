@@ -93,7 +93,7 @@ eiodp_request_GET(eiodp_fd,cmd,data,len,rdata,maxretlen);
 "iodp_tcp_win.c" 为windows平台的tcp接口的eiodp库，可以与其它平台的tcp接口的eiodp库相互通讯。    
 "qiodp.cpp" 为Qt平台的eiodp库（目前只支持tcp接口），。。
 
-使用方式可以在demo文件夹里查看示例程序
+使用方式可以在demo文件夹里查看示例程序,windows下程序编译运行build.bat即可。
 
 
 ## 2 协议说明
