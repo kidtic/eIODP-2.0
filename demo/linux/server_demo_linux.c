@@ -1,4 +1,5 @@
 #include "iodp_serial_linux.h"
+#include "iodp_tcp_linux.h"
 
 //把每个数自+1
 void myfunc(eIODP_FUNC_MSG msg)
@@ -14,16 +15,23 @@ void myfunc(eIODP_FUNC_MSG msg)
 
 void main(int argc, char **argv)
 {
-    if (argc < 3) {
-		printf("error UseageL %s [com] [baud]\n", argv[0]);
+    if (argc < 4) {
+		printf("error UseageL %s com [com] [baud]\n error UseageL %s tcp [ip] [port]\n", argv[0]);
         return;
 	}
     printf("version 1.2\r\n");
+    IODP_TTY_TYPE* myfd;
+    IODP_TCP_TYPE* tcpfd;
 
-    IODP_TTY_TYPE* myfd = iodptty_init(IODP_MODE_SERVER ,argv[1], atoi(argv[2]),'N');
-
-    iodptty_addFunc(myfd, 0x10, myfunc);
-
+    if(strcmp(argv[1],"tcp")==0){
+        tcpfd = iodptcp_init_server(argv[2], atoi(argv[3]));
+        iodptcp_addFunc(tcpfd, 0x10, myfunc);
+    }
+    else if(strcmp(argv[1],"com")==0)
+    {
+        myfd = iodptty_init(IODP_MODE_SERVER ,argv[2], atoi(argv[3]),'N');
+        iodptty_addFunc(myfd, 0x10, myfunc);
+    }
 
     /* code */
     while(1){
