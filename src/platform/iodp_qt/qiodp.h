@@ -29,11 +29,18 @@ public:
 
 
 public:
-    Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType);
+    Qiodp(Mode_t mode, ConnType_t connType);
     ~Qiodp();
 
     //返回连接状态
     bool isConnect(void);
+
+    /**
+     * @brief 设置本地IP
+     * @param ip
+     * @return
+     */
+    qint32 tcpLocalIP(QString ip);
 
     /**
      * @brief 如果是TCP客户端，调用连接（非阻塞，调用后使用isConnect检查）

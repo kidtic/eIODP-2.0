@@ -17,7 +17,7 @@
 
 /*============================config区域==============================*/
 //定义接受环形缓存大小
-#define IODP_RECV_MAX_LEN 1024
+#define IODP_RECV_MAX_LEN 4096
 //定义返回接受包DATA大小
 #define IODP_RETDATA_BUFFERSIZE 4096
 //定义发送区域大小

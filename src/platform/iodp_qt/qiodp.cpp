@@ -5,7 +5,7 @@
 
 
 
-Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
+Qiodp::Qiodp(Mode_t mode, ConnType_t connType)
 {
     
     if(mode == CLIENT){
@@ -24,6 +24,7 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
     if(m_connType == TCP)
     {
         tcp_fd = new QTcpSocket(this);
+        tcp_fd->setReadBufferSize(4096);
         //连接成功后
         QObject::connect(tcp_fd,&QTcpSocket::connected,this,[&](){
             connStatus = true;
@@ -32,9 +33,9 @@ Qiodp::Qiodp(QWidget *parent, Mode_t mode, ConnType_t connType)
 
         connect(tcp_fd,&QTcpSocket::readyRead,this,[&](){
             int rlen;
-            rlen = tcp_fd->read((char*)recvBuf,1024);
+            rlen = tcp_fd->read((char*)recvBuf,4096);
             eiodp_put(eiodp_fd, recvBuf, rlen);
-            qDebug()<<"recv tcp";
+            //qDebug()<<"recv tcp";
         });
     }
     else if(m_connType == COM)
@@ -76,6 +77,17 @@ qint32 Qiodp::tcpConn(QString ip, quint16 port)
         return -1;
     }
     tcp_fd->connectToHost(ip,port);
+    return 0;
+}
+
+qint32 Qiodp::tcpLocalIP(QString ip)
+{
+    if(m_connType != TCP){
+        qDebug()<<"error 当前链接模式非TCP";
+        emit uilog("error 当前链接模式非TCP");
+        return -1;
+    }
+    tcp_fd->bind(QHostAddress(ip));
     return 0;
 }
 
@@ -153,7 +165,7 @@ QByteArray Qiodp::requestGET(quint32 cmd, QByteArray data)
 
         qApp->processEvents();
         outtime++;
-        if(outtime > 1000000){
+        if(outtime > 3000000){
             qDebug()<<"request outtime";
             emit uilog("request outtime");
             return retdata;
