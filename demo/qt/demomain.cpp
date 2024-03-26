@@ -62,11 +62,11 @@ void demoMain::new_eiodpfd(void)
 
 
     if(conStr.compare("TCP")==0){
-        qiodp_fd = new Qiodp(this, Qiodp::CLIENT, Qiodp::TCP);
+        qiodp_fd = new Qiodp( Qiodp::CLIENT, Qiodp::TCP);
     }
     else if(conStr.compare("Serial")==0)
     {
-        qiodp_fd = new Qiodp(this, Qiodp::CLIENT, Qiodp::COM);
+        qiodp_fd = new Qiodp( Qiodp::CLIENT, Qiodp::COM);
     }
     connect(qiodp_fd, &Qiodp::uilog, this, [&](QString str){
         ui->tb_log->append(str);
@@ -252,5 +252,9 @@ void demoMain::on_allTest(void)
             }
         }
     }
+    //lebel
+    QString stlog = "压力测试   总包数：";
+    stlog += QString::number(okcnt) + " 错误包个数：" + QString::number(errorcnt);
+    ui->lb_log->setText(stlog);
 }
 

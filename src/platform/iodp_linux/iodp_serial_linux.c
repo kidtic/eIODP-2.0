@@ -109,6 +109,14 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 			cfsetispeed(&newtio, B9600);
 			cfsetospeed(&newtio, B9600);
 			break;
+        case 38400:
+			cfsetispeed(&newtio, B38400);
+			cfsetospeed(&newtio, B38400);
+			break;
+        case 57600:
+			cfsetispeed(&newtio, B57600);
+			cfsetospeed(&newtio, B57600);
+            break;
 		case 115200:
 			cfsetispeed(&newtio, B115200);
 			cfsetospeed(&newtio, B115200);
