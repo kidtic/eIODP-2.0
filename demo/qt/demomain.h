@@ -1,6 +1,6 @@
-#ifndef DEMOMAIN_H
+﻿#ifndef DEMOMAIN_H
 #define DEMOMAIN_H
-
+#pragma execution_character_set("utf-8")
 #include <QWidget>
 #include "qiodp.h"
 #include "QTimer"

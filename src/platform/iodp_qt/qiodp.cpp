@@ -1,8 +1,8 @@
-#include <qiodp.h>
+﻿#include <qiodp.h>
 #include <qdebug.h>
 #include <qwidget.h>
 #include <QApplication>
-
+#include <QNetworkProxy>
 
 
 Qiodp::Qiodp(Mode_t mode, ConnType_t connType)
@@ -25,6 +25,7 @@ Qiodp::Qiodp(Mode_t mode, ConnType_t connType)
     {
         tcp_fd = new QTcpSocket(this);
         tcp_fd->setReadBufferSize(4096);
+        tcp_fd->setProxy(QNetworkProxy::NoProxy);
         //连接成功后
         QObject::connect(tcp_fd,&QTcpSocket::connected,this,[&](){
             connStatus = true;

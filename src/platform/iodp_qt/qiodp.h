@@ -1,6 +1,6 @@
-#ifndef QIODP_H
+﻿#ifndef QIODP_H
 #define QIODP_H
-
+#pragma execution_character_set("utf-8")
 extern "C"{
     #include "eiodp.h"
 };
