@@ -1,3 +1,6 @@
 build/**
 demo/win/iodp_tcp/build
 .vscode/BROWSE*
+eiodp_qtdemo.pro.user
+eiodp_qtdemo.pro.user*
+eiodp_qtdemo.exe

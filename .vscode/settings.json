@@ -7,6 +7,7 @@
         "stdlib.h": "c",
         "winsock2.h": "c",
         "iodp_tcp_win.h": "c",
-        "iodp_serial_linux.h": "c"
+        "iodp_serial_linux.h": "c",
+        "ws2tcpip.h": "c"
     }
 }
