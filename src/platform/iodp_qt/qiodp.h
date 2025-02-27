@@ -81,7 +81,7 @@ private: //data
     QTcpSocket* tcp_fd;
     QSerialPort* serial_fd;
     eIODP_TYPE* eiodp_fd;
-    uint8_t recvBuf[2048];
+    uint8_t recvBuf[IODP_RETDATA_BUFFERSIZE];
 
 
 

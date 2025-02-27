@@ -217,7 +217,8 @@ void demoMain::on_allTest(void)
     QByteArray rdata;
     int testlen = 512;
     //随机测试长度
-    testlen = rand()%600+100;
+    testlen = rand()%3700+100;
+    //testlen = 3800;
     //随机数组
     sdata.clear();
     rdata.clear();

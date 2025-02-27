@@ -24,7 +24,7 @@ Qiodp::Qiodp(Mode_t mode, ConnType_t connType)
     if(m_connType == TCP)
     {
         tcp_fd = new QTcpSocket(this);
-        tcp_fd->setReadBufferSize(4096);
+        tcp_fd->setReadBufferSize(IODP_RETDATA_BUFFERSIZE);
         tcp_fd->setProxy(QNetworkProxy::NoProxy);
         //连接成功后
         QObject::connect(tcp_fd,&QTcpSocket::connected,this,[&](){
@@ -34,7 +34,7 @@ Qiodp::Qiodp(Mode_t mode, ConnType_t connType)
 
         connect(tcp_fd,&QTcpSocket::readyRead,this,[&](){
             int rlen;
-            rlen = tcp_fd->read((char*)recvBuf,4096);
+            rlen = tcp_fd->read((char*)recvBuf,IODP_RETDATA_BUFFERSIZE);
             eiodp_put(eiodp_fd, recvBuf, rlen);
             //qDebug()<<"recv tcp";
         });
